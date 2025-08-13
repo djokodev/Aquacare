@@ -100,14 +100,18 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(APIView):
     """
-    🔑 Authentification des pisciculteurs MAVECAM.
+    🔑 Authentification flexible des pisciculteurs MAVECAM.
     
-    Système de connexion spécialisé utilisant le nom d'affichage plutôt
-    que le numéro de téléphone pour une meilleure expérience utilisateur.
+    Système de connexion supportant deux méthodes :
+    1. **Nom d'affichage + mot de passe** (UX optimisée)
+    2. **Numéro de téléphone + mot de passe** (fallback)
     
-    **Identifiants de connexion :**
+    **Méthode 1 - Identifiants par nom :**
     - Personnes physiques : "Jean Farmer" (first_name + last_name)
     - Entreprises : "AquaFerme SARL" (business_name)
+    
+    **Méthode 2 - Identifiants par téléphone :**
+    - Format : "+237XXXXXXXXX" + mot de passe
     
     **Réponse :**
     - Profil utilisateur simplifié
@@ -117,11 +121,11 @@ class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
     
     @extend_schema(
-        summary="Connexion avec nom d'affichage",
-        description="Authentification utilisant le nom d'affichage plutôt que le numéro de téléphone",
+        summary="Connexion utilisateur MAVECAM",
+        description="Authentification flexible avec deux méthodes : nom d'affichage OU numéro de téléphone + mot de passe",
         examples=[
             OpenApiExample(
-                'Connexion personne physique',
+                'Connexion personne physique par nom',
                 value={
                     "login_name": "Jean Farmer",
                     "password": "MotDePasse123"
@@ -129,17 +133,25 @@ class LoginView(APIView):
                 request_only=True
             ),
             OpenApiExample(
-                'Connexion entreprise',
+                'Connexion entreprise par nom',
                 value={
                     "login_name": "AquaFerme SARL",
                     "password": "EntrepriseSecure456"
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                'Connexion par numéro de téléphone',
+                value={
+                    "phone_number": "+237691234569",
+                    "password": "MotDePasse123"
                 },
                 request_only=True
             )
         ],
         responses={
             200: OpenApiResponse(description="Connexion réussie avec tokens JWT"),
-            400: OpenApiResponse(description="Identifiants incorrects"),
+            400: OpenApiResponse(description="Identifiants incorrects ou manquants"),
         }
     )
     def post(self, request):

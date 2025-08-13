@@ -55,7 +55,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                     'phone_number': ['Un utilisateur avec ce numéro de téléphone existe déjà.']
                 })
             else:
-                raise serializers.ValidationError('Erreur de contrainte de base de données.')
+                raise serializers.ValidationError('Une erreur inattendue s\'est produite. Veuillez réessayer.')
 
 
 class UserProfileSimpleSerializer(serializers.ModelSerializer):
@@ -79,33 +79,56 @@ class UserProfileSimpleSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.Serializer):
     """
-    Serializer pour l'authentification
+    Serializer pour l'authentification MAVECAM.
+    
+    Supporte deux méthodes de connexion :
+    1. login_name + password (nom d'entreprise ou "prénom nom")
+    2. phone_number + password (numéro de téléphone)
     """
     login_name = serializers.CharField(
+        required=False,
         help_text="Nom de l'entreprise OU nom complet de la personne (ex: 'Jean Farmer')"
     )
-    password = serializers.CharField(write_only=True)
+    phone_number = serializers.CharField(
+        required=False,
+        help_text="Numéro de téléphone (format: +237XXXXXXXXX)"
+    )
+    password = serializers.CharField(write_only=True, required=False)
     
     def validate(self, attrs):
         login_name = attrs.get('login_name')
+        phone_number = attrs.get('phone_number')
         password = attrs.get('password')
         
-        if login_name and password:
-            user = authenticate(login_name=login_name, password=password)
-            
-            if not user:
-                raise serializers.ValidationError(
+        # Vérifier qu'au moins un identifiant est fourni
+        if not login_name and not phone_number:
+            raise serializers.ValidationError(
+                "Veuillez fournir soit le nom de connexion soit le numéro de téléphone."
+            )
+        
+        if not password:
+            raise serializers.ValidationError("Le mot de passe est requis.")
+        
+        # Tentative d'authentification avec les paramètres fournis
+        user = authenticate(login_name=login_name, phone_number=phone_number, password=password)
+        
+        if not user:
+            if phone_number:
+                error_msg = (
+                    "Numéro de téléphone ou mot de passe incorrect. "
+                    "Vérifiez votre numéro de téléphone et votre mot de passe."
+                )
+            else:
+                error_msg = (
                     "Nom de connexion ou mot de passe incorrect. "
                     "Utilisez le nom de votre entreprise ou votre nom complet."
                 )
-            
-            if not user.is_active:
-                raise serializers.ValidationError("Compte désactivé.")
-            
-            attrs['user'] = user
-        else:
-            raise serializers.ValidationError("Nom de connexion et mot de passe requis.")
+            raise serializers.ValidationError(error_msg)
         
+        if not user.is_active:
+            raise serializers.ValidationError("Compte désactivé.")
+        
+        attrs['user'] = user
         return attrs
 
 

@@ -126,7 +126,6 @@ class User(AbstractUser):
         help_text=_('Zone géographique d\'intervention de l\'activité')
     )
     
-    
     # Désactiver le username (on utilise phone_number)
     username = None
     
@@ -213,16 +212,19 @@ class User(AbstractUser):
         self.full_clean()
         super().save(*args, **kwargs)
     
+
     def __str__(self):
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name} ({self.phone_number})"
         return self.phone_number
     
+
     @property
     def full_name(self):
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
         return self.phone_number
+    
     
     @property
     def login_name(self):

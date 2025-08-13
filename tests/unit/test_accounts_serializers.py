@@ -199,7 +199,7 @@ class TestLoginSerializer:
     
     def test_valid_login_credentials(self, user_factory):
         """
-        Test la connexion avec des identifiants valides.
+        Test la connexion avec des identifiants valides par nom.
         
         Flux mobile : Utilisateur saisit login_name/password corrects.
         """
@@ -215,6 +215,55 @@ class TestLoginSerializer:
         data = {
             'login_name': 'Jean Farmer',  # login_name pour individual
             'password': 'motdepasse123'
+        }
+        
+        serializer = LoginSerializer(data=data)
+        assert serializer.is_valid(), f"Errors: {serializer.errors}"
+        assert serializer.validated_data['user'] == user
+    
+    def test_valid_login_by_phone(self, user_factory):
+        """
+        Test la connexion avec numéro de téléphone valide.
+        
+        Flux mobile : Utilisateur saisit phone_number/password corrects.
+        """
+        user = user_factory(
+            phone_number='+237691234567',
+            first_name='Marie',
+            last_name='Testeur',
+            account_type='individual',
+            age_group='26_35'
+        )
+        user.set_password('motdepasse123')
+        user.save()
+        
+        data = {
+            'phone_number': '+237691234567',
+            'password': 'motdepasse123'
+        }
+        
+        serializer = LoginSerializer(data=data)
+        assert serializer.is_valid(), f"Errors: {serializer.errors}"
+        assert serializer.validated_data['user'] == user
+    
+    def test_valid_login_company_by_phone(self, user_factory):
+        """
+        Test la connexion d'une entreprise avec numéro de téléphone.
+        """
+        user = user_factory(
+            phone_number='+237695554433',
+            business_name='AquaFerme SARL',
+            account_type='company',
+            legal_status='sarl',
+            promoter_name='Marie Directrice',
+            age_group=None  # Les entreprises n'ont pas d'age_group
+        )
+        user.set_password('entreprise123')
+        user.save()
+        
+        data = {
+            'phone_number': '+237695554433',
+            'password': 'entreprise123'
         }
         
         serializer = LoginSerializer(data=data)
@@ -275,16 +324,25 @@ class TestLoginSerializer:
     
     def test_missing_credentials(self):
         """
-        Test que tous les champs sont requis pour la connexion.
+        Test que les champs requis sont validés correctement.
         """
-        # login_name manquant
+        # Aucun identifiant fourni - doit échouer
         data = {'password': 'motdepasse123'}
         serializer = LoginSerializer(data=data)
         assert not serializer.is_valid()
-        assert 'login_name' in serializer.errors
+        assert 'non_field_errors' in serializer.errors
+        assert 'Veuillez fournir soit le nom de connexion soit le numéro de téléphone' in str(serializer.errors)
         
-        # Password manquant
+        # Password manquant - doit échouer
         data = {'login_name': 'Jean Test'}
         serializer = LoginSerializer(data=data)
         assert not serializer.is_valid()
-        assert 'password' in serializer.errors
+        assert 'non_field_errors' in serializer.errors
+        assert 'mot de passe est requis' in str(serializer.errors)
+        
+        # Phone sans password - doit échouer
+        data = {'phone_number': '+237691234567'}
+        serializer = LoginSerializer(data=data)
+        assert not serializer.is_valid()
+        assert 'non_field_errors' in serializer.errors
+        assert 'mot de passe est requis' in str(serializer.errors)

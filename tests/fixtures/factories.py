@@ -20,10 +20,15 @@ class UserFactory(DjangoModelFactory):
     class Meta:
         model = User
     
-    username = factory.Sequence(lambda n: f"pisciculteur_{n}")
-    email = factory.LazyAttribute(lambda obj: f"{obj.username}@exemple.com")
+    phone_number = factory.Sequence(lambda n: f"+23769123456{n:01d}")
+    email = factory.LazyAttribute(lambda obj: f"user{obj.phone_number[-1]}@exemple.com")
     first_name = factory.Faker('first_name', locale='fr_FR')
     last_name = factory.Faker('last_name', locale='fr_FR')
+    account_type = 'individual'
+    age_group = '26_35'
+    activity_type = 'poisson_table'
+    region = 'centre'
+    language_preference = 'fr'
     is_active = True
     is_staff = False
     
@@ -42,17 +47,32 @@ class MavecamAdminFactory(UserFactory):
     
     Simule les comptes du personnel MAVECAM qui gèrent les certifications.
     """
-    username = factory.Sequence(lambda n: f"admin_mavecam_{n}")
-    email = factory.LazyAttribute(lambda obj: f"{obj.username}@mavecam.com")
+    phone_number = factory.Sequence(lambda n: f"+23767000000{n:01d}")
+    email = factory.LazyAttribute(lambda obj: f"admin{obj.phone_number[-1]}@mavecam.com")
     first_name = "Admin"
     last_name = "MAVECAM"
+    account_type = 'individual'
+    age_group = '26_35'
+    is_verified = True
     is_staff = True
     is_superuser = True
 
 
+class CompanyUserFactory(UserFactory):
+    """
+    Factory pour créer des utilisateurs entreprises de test.
+    """
+    account_type = 'company'
+    business_name = factory.Sequence(lambda n: f"AquaFerme {n} SARL")
+    legal_status = 'sarl'
+    promoter_name = factory.LazyAttribute(lambda obj: f"{obj.first_name} {obj.last_name}")
+    age_group = None  # Les entreprises n'ont pas d'âge
+
+
 # Exemples d'usage dans les tests :
 # 
-# user = UserFactory()  # Utilisateur avec données aléatoires
-# user = UserFactory(username='nom_specifique')  # Avec username spécifique
+# user = UserFactory()  # Utilisateur individuel avec données aléatoires
+# user = UserFactory(phone_number='+237691234567')  # Avec téléphone spécifique
+# company = CompanyUserFactory()  # Utilisateur entreprise
 # users = UserFactory.create_batch(5)  # 5 utilisateurs d'un coup
 # admin = MavecamAdminFactory()  # Administrateur MAVECAM
