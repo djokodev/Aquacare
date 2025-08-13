@@ -1,0 +1,54 @@
+---
+alwaysApply: true
+---
+1-	Comment l’utilisateur devra-t-il crée son compte ? 
+
+D’abord choisir s’il s’agit d’une personne ou d’une entreprise ? 
+Ensuite choisir le maillon d’activité (producteurs d’alevins ou de poisson de table…)
+Pour les entreprises : nom de l’entreprise, localisation (région, département arrondissement et quartier), statut juridique (GIC, scoop, SARL…), nom du promoteur, téléphone, email.
+Pour les personnes physiques : nom, prénom, classe d’âge, numéro de téléphone, zone d’intervention 
+
+2-	Avec quelles informations exactement il devra se connecter ?
+Nom de la personne ou de l’entreprise et le mot de passe personnalisé
+
+3-	C’est quoi exactement un cycle de production dans ce contexte ? 
+Un cycle de production est la période qui sépare les activités de production à la commercialisation. En production d’alevins un cycle dure en moyenne 60 jours et en grossissement en moyenne 120 jours. 
+Quel sont l’ensemble d’informations qu’il faut pour le constituer : Date de début, date de fin, quantité produite, poids moyen finale, effectif initiale et effectif finale dépenses et recettes…
+4-	Comment la fonctionnalité Planificateur d’alimentation est sensée fonctionné ? 
+Chaque semaine définir la quantité d’aliment à donner aux poissons en fonction de l’effectif, le gain de poids. Il peut également proposer les fréquences de nourrissage.
+
+Informations à Collecter 
+1-	La liste exacte des produits avec toutes les informations nécessaires : Nom, référence, description, prix, et des photos (de bonne qualité si possible) etc. Ultérieurement
+
+2-	Les guides nutritionnels : Quelle quantité de quel aliment donner pour des poissons de tel poids/âge ? etc. Ultérieurement
+
+3-	Les fiches conseils : (PDF, Tutos vidéo etc.) qu’on doit intégrer dans l’application. Ultérieurement. 
+
+
+4-	Les formules de calcul exactes : Comment calculer la biomasse, le FCR (Food Conversion Ratio), etc. ?
+
+Taux de survie (TS) : il est calculé à partir du nombre total de poissons à la fin de l’expérience et de l’effectif en début d’élevage, selon la formule ci-dessous :
+TS (%) = (Nombre de poissons à l’état final / Nombre de poissons à l’état initial) x 100 
+
+Gain de masse corporelle ou gain de poids moyen permet d’évaluer la croissance pondérale des poissons pendant un temps donné. Il est calculé à partir de la formule : 
+Gain de poids moyen (g) = Poids final (g) – Poids initial (g) 
+
+Taux de croissance spécifique (TCS) est un coefficient qui permet
+D’évaluer le poids gagné par le poisson chaque jour, en pourcentage de son poids vif. Il est calculé à partir de la formule : 
+
+TCS (%/j) = ([ln (poids final) – ln (poids initial)] / Durée de l’expérience en jours) x 100
+
+
+L’indice de consommation (IC) qui est le rapport entre la quantité d’aliment distribuée et le gain de poids. Il a été calculé à partir de la formule suivante : 
+
+IC = Quantité d’aliment sec distribuée (g) / Gain de poids (g).
+
+
+Le Facteur de Condition K qui a été calculé à partir de la formule suivante : 
+ 
+K = (P/ L3) *100 Où P est le poids en gramme ; L est la longueur standard du poisson en centimètre et 100 le facteur multiplicateur
+
+
+5-	La charte graphique : Logo de MAVECAM, couleurs primaires et secondaires.
+Ultérieurement
+

@@ -1,0 +1,20 @@
+Django>=5.1.0,<5.2.0
+
+djangorestframework>=3.14.0
+djangorestframework-simplejwt>=5.3.0
+
+psycopg2-binary>=2.9.0  # PostgreSQL adapter (pour production)
+
+# CORS pour React Native
+django-cors-headers>=4.3.0
+
+Pillow>=10.0.0
+
+python-decouple>=3.8  # Pour variables d'environnement
+
+# Tests et qualité code
+pytest>=7.4.0
+pytest-django>=4.7.0
+pytest-cov>=4.1.0
+factory-boy>=3.3.0
+coverage>=7.3.0

@@ -1,0 +1,135 @@
+---
+alwaysApply: true
+---
+
+Documentation Technique d'Exécution – API MAVECAM AquaCare (MVP)
+
+
+
+Version : 1.0
+Périmètre : Minimum Viable Product (MVP) - Phase 1
+
+
+
+1. Vision d'Ensemble et Principes Architecturaux
+
+L'API RESTful pour AquaCare sert de cerveau central pour l'application mobile. 
+Elle doit être conçue en gardant à l'esprit un principe fondamental : le client mobile est semi-autonome. 
+L'utilisateur doit pouvoir réaliser ses tâches quotidiennes essentielles (saisie de données) sans connexion internet. 
+L'API est donc le point de consolidation, de sauvegarde et d'orchestration des données.
+
+
+
+Stack Technique :
+
+Framework : Django & Django Rest Framework (DRF)
+Base de Données : PostgreSQL
+Authentification : JSON Web Tokens (JWT)
+
+
+
+2. Règles Transverses de l'API
+
+Ces principes s'appliquent à tous les endpoints pour garantir la cohérence.
+
+Authentification : 
+
+Toute requête nécessitant l'identité de l'utilisateur sera protégée et devra contenir l'en-tête Authorization: Bearer <access_token>. 
+
+Un endpoint de login fournira un access_token (courte durée) et un refresh_token (longue durée).
+
+Internationalisation: L'API doit supporter le français (fr) et l'anglais (en) dès le MVP. 
+
+Le client spécifiera la langue via l'en-tête Accept-Language: fr. 
+
+Les modèles de données contenant du texte visible par l'utilisateur (noms de produits, titres de guides) seront conçus pour stocker les traductions.
+
+Gestion des Erreurs : Les réponses d'erreur seront standardisées avec des codes HTTP appropriés (400, 401, 403, 404) et un corps de réponse JSON clair : { "detail": "Description de l'erreur." }.
+
+
+Stratégie de Synchronisation (Point Crucial) : 
+
+C'est le mécanisme le plus critique.
+
+Sens : La synchronisation est principalement ascendante (du mobile vers le serveur). 
+Les données créées hors-ligne par l'utilisateur sont envoyées en masse.
+
+Mécanisme : L'API exposera des endpoints spécifiques de type .../sync/ qui acceptent un tableau d'objets.
+
+Déduplication : Pour chaque enregistrement créé hors-ligne (ex: une saisie de mortalité), l'application mobile doit générer un identifiant unique (UUID). 
+
+Cet UUID est envoyé avec l'objet lors de la synchronisation. L'API l'utilisera pour s'assurer qu'un même enregistrement, envoyé plusieurs fois à cause d'une coupure réseau, ne soit traité qu'une seule fois.
+
+
+
+3. Architecture des Applications Django
+
+Le backend sera structuré en applications Django distinctes, chacune avec une responsabilité métier claire.
+
+
+1- Rôle Métier : Gérer l'identité, l'authentification et le profil de la ferme du pisciculteur. C'est la porte d'entrée du système.
+
+Modèles (Classes) : 
+
+User : Représente le compte de connexion de l'utilisateur. Hérite du modèle utilisateur standard de Django.
+
+FarmProfile : Contient les informations spécifiques à l'exploitation de l'utilisateur (nom de la ferme, localisation, etc.). 
+Ce modèle est lié en OneToOne avec le User.
+
+Implémentations Délicates & Dépendances Frontend : Certification "Éleveur Suivi" : Le statut de certification (certification_status) dans le FarmProfile n'est pas modifiable par l'utilisateur via l'API. Il doit être géré exclusivement par les administrateurs MAVECAM via le back-office Django Admin. 
+
+L'API se contente de le lire et de l'exposer. Le frontend doit simplement afficher ce statut (ex: un badge sur le profil).
+
+
+2- Rôle Métier : Cœur du pilotage de l'élevage. Gère le suivi des cycles de production et la santé des poissons. C'est ici que la logique hors-ligne est la plus importante.
+
+Modèles (Classes) : 
+
+ProductionCycle : Représente une "campagne" de production, de l'empoissonnement à la récolte.
+
+CycleLog : Enregistre les données de suivi quotidiennes ou périodiques (poids moyen, mortalité...). C'est la donnée la plus fréquemment créée hors-ligne.
+
+SanitaryLog : Enregistre un événement sanitaire (symptômes, traitements). Peut être lié à une photo.
+
+Implémentations Délicates & Dépendances Frontend : Synchronisation en Masse, Cette application doit implémenter les endpoints /sync/ pour CycleLog et SanitaryLog. Elle doit être capable de traiter une liste d'enregistrements en une seule transaction. Upload de Fichiers (Photo/Vidéo) : L'ajout d'une photo à un SanitaryLog se fera via une requête multipart/form-data. 
+
+Crucial pour le frontend : L'application mobile DOIT compresser l'image avant l'envoi pour préserver le forfait data de l'utilisateur et réduire le temps de chargement. 
+
+
+3- Rôle Métier : Gérer le catalogue de produits et la prise de commandes. C'est le canal de vente de MAVECAM.
+
+Modèles (Classes) :
+
+Product : Représente un produit vendable (aliment, alevin, etc.). Doit inclure les champs pour l'internationalisation.
+
+Order : Représente une commande passée par un utilisateur.
+
+OrderItem : Ligne de détail d'une commande (quel produit, quelle quantité).
+
+Implémentations Délicates & Dépendances Frontend : Paiement Hors-ligne (MVP), Le flux de création de commande doit être simple. L'API crée la commande avec un statut par défaut comme "pending_payment_on_delivery". Il n'y a aucune intégration de paiement en ligne dans le MVP. Le rôle de l'API est de notifier MAVECAM (via le back-office) qu'une nouvelle commande a été enregistrée.
+
+Catalogue : Le frontend doit pouvoir mettre en cache la liste des produits pour la consulter hors-ligne, mais la commande ne peut être passée que lorsque la connexion est disponible.
+
+
+4- Rôle Métier : Fournir l'assistance technique et renforcer la relation client. C'est le lien direct entre l'éleveur et l'expertise MAVECAM.
+
+Modèles (Classes) :
+
+SupportTicket : Représente une demande de support formelle, avec un sujet et un statut (ouvert, fermé).
+
+TicketMessage : Représente un message (question ou réponse) au sein d'un ticket. Permet de conserver un historique structuré.
+
+Conversation / ChatMessage (Pour le chat simple) : Représente un échange plus informel entre un utilisateur et un technicien.
+
+Implémentations Délicates & Dépendances Frontend : Gestion du Chat "asynchrone" : Le chat du MVP n'utilisera pas de WebSockets (pas de temps réel). Il fonctionnera comme un simple échange de messages. 
+
+Crucial pour le frontend : Lorsqu'un utilisateur envoie un message de chat hors-ligne, l'application mobile doit le stocker localement avec un statut "envoi en cours". Dès que la connexion est rétablie, elle envoie le message à l'API via une requête POST standard. L'API est sans état et traite chaque message comme une nouvelle ressource à créer.
+
+
+5- Rôle Métier : Éduquer l'utilisateur en fournissant du contenu de référence. Positionne MAVECAM comme un partenaire expert.
+
+Modèles (Classes) :
+
+Guide : Représente une fiche conseil, un guide nutritionnel ou un tutoriel. Peut contenir du texte, des liens vers des PDF ou des vidéos.
+
+Implémentations Délicates & Dépendances Frontend : Mise en Cache Côté Client, L'API se contente de fournir une liste des guides disponibles. Il est de la responsabilité du frontend de télécharger et stocker ce contenu (notamment les PDF) sur l'appareil pour un accès entièrement hors-ligne. L'API doit juste permettre de savoir si un guide a été mis à jour pour que le client puisse le télécharger à nouveau.
